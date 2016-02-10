@@ -59,28 +59,26 @@ def get_table_joins(tables):
     string += new_join_string
   return string
 
-def get_select_string(variables, table):
-  select_string = ""
-  for variable in variables:
-      select_string += "{0}.{1} ".format(table, variable)
-
-def get_sql_query(tables_to_variables_dict):
-  sql_string = ""
-  for table, variables in tables_to_variables_dict.iteritems():
-    select_string = get_select_string(variables, table)
-    sql_string += "SELECT {0} FROM {1} ".format(select_string, table)
+def get_sql_query_for_table(table, variables):
+  for i, variable in enumerate(variables):
+    if i == 0:
+      select_string = "{0}.{1}".format(table, variable)
+    else:
+      select_string += ", {0}.{1}".format(table, variable)
+  sql_string = "SELECT {0} FROM {1}".format(select_string, table)    
   return sql_string
+
+def read_from_database(tables_to_variables_dict, disk_engine):
+  connection = disk_engine.connect()
+  result = pandas.DataFrame()
+  for table, variables in tables_to_variables_dict.iteritems():
+    sql = get_sql_query_for_table(table, variables)
+    result = pandas.concat([pandas.read_sql(sql, connection), result], axis=1)
+  print result
 
 disk_engine = create_engine('sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db') # Initializes database
 column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
 variables = ['Total_Persons', 'Total_Persons_Males', 'Total_Persons_Females', 'Persons_55_64_years_Widowed', 'Persons_Total_Total']
 tables_to_variables_dict = get_variables_to_read_per_table(variables, column_to_table_dict)
 
-print get_sql_query(tables_to_variables_dict)
-
-connection = disk_engine.connect()
-sql =   get_sql_query(tables_to_variables_dict)
-result = connection.execute(sql)
-for row in result:
-  print row
-
+read_from_database(tables_to_variables_dict, disk_engine)
