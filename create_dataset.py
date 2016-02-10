@@ -47,18 +47,6 @@ def flip_dict(dict):
     inv_dict[v].append(k)  
   return inv_dict
 
-def get_tables(variables, column_to_table_dict):
-  return map(lambda variable: column_to_table_dict[variable], variables)
-
-def get_table_joins(tables):
-  # list of tables => "INNER JOIN TableA on TableA.region_id = TableB.region_id"
-  string = ""
-  tableA = tables[0]
-  for tableB in tables[1:]:
-    new_join_string = "INNER JOIN {0} on {1}.region_id = {0}.region_id ".format(tableB, tableA)
-    string += new_join_string
-  return string
-
 def get_sql_query_for_table(table, variables):
   for i, variable in enumerate(variables):
     if i == 0:
