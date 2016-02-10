@@ -70,15 +70,18 @@ def get_sql_query_for_table(table, variables):
 
 def read_from_database(tables_to_variables_dict, disk_engine):
   connection = disk_engine.connect()
-  result = pandas.DataFrame()
+  result_df = pandas.read_sql("SELECT {0}.region_id FROM {0}".format(tables_to_variables_dict.keys()[0]), connection)
   for table, variables in tables_to_variables_dict.iteritems():
     sql = get_sql_query_for_table(table, variables)
-    result = pandas.concat([pandas.read_sql(sql, connection), result], axis=1)
-  print result
+    result_df = pandas.concat([pandas.read_sql(sql, connection), result_df], axis=1)  
+  return result_df.set_index('region_id')
 
 disk_engine = create_engine('sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db') # Initializes database
-column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
 variables = ['Total_Persons', 'Total_Persons_Males', 'Total_Persons_Females', 'Persons_55_64_years_Widowed', 'Persons_Total_Total']
+
+column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
 tables_to_variables_dict = get_variables_to_read_per_table(variables, column_to_table_dict)
 
-read_from_database(tables_to_variables_dict, disk_engine)
+# print "SELECT {0}.region_id FROM {0}".format(tables_to_variables_dict.keys()[0])
+
+print read_from_database(tables_to_variables_dict, disk_engine)
