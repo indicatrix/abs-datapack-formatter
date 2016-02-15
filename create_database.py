@@ -71,4 +71,3 @@ disk_engine = create_engine('sqlite:///../data/2011_BCP_ALL_for_AUST_long-header
 geo_levels_to_read = ['SA3']
 
 read_data_for_geo_level_into_database(directory, geo_levels_to_read, disk_engine)
-# update_metadata(disk_engine)
