@@ -61,7 +61,7 @@ def read_from_database(tables_to_variables_dict, disk_engine):
   for table, variables in tables_to_variables_dict.iteritems():
     sql = get_sql_query_for_table(table, variables)
     result_df = pandas.concat([pandas.read_sql(sql, connection), result_df], axis=1)  
-  return result_df.set_index('region_id')
+  return result_df
 
 def import_table_builder_outputs(data_directory):
   directory_file_list = os.listdir(data_directory)
@@ -82,6 +82,5 @@ variables = ['Total_Persons', 'Total_Persons_Males', 'Total_Persons_Females', 'P
 column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
 tables_to_variables_dict = get_variables_to_read_per_table(variables, column_to_table_dict)
 
-dataset_df = read_from_database(tables_to_variables_dict, disk_engine)
-print dataset_df
+dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(columns={'region_id': 'GeographyId'}).set_index('GeographyId')
 dataset_df.to_csv("../data/constraint_dataset.csv")
