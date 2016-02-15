@@ -82,5 +82,6 @@ variables = ['Total_Persons', 'Total_Persons_Males', 'Total_Persons_Females', 'P
 column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
 tables_to_variables_dict = get_variables_to_read_per_table(variables, column_to_table_dict)
 
-dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(index={'region_id': 'GeographyId'})
+dataset_df = read_from_database(tables_to_variables_dict, disk_engine)
+print dataset_df
 dataset_df.to_csv("../data/constraint_dataset.csv")

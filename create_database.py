@@ -34,13 +34,16 @@ def read_data_for_geo_level_into_database(directory, geo_levels, disk_engine):
 
     bar.start()
     for i, filename in enumerate(directory_file_list):
+      if filename == '.DS_Store':
+       continue
       bar.update(i)
       reg = r'([A-Z]+)(\d+)([A-Z]*)'
+      print filename
       match = re.search(reg, filename).group(0)
       table_name = (geo_level + '_' + match)
       if table_name not in table_names:
         df = pandas.DataFrame.from_csv(data_directory + filename, index_col='region_id')
-        df.to_sql(table_name, disk_engine, if_exists='append')
+        df.to_sql(table_name, disk_engine, if_exists='fail')
         column_list = list(df)
       else:
         column_list = get_column_names_from_table(disk_engine, table_name)
@@ -48,7 +51,7 @@ def read_data_for_geo_level_into_database(directory, geo_levels, disk_engine):
       table_columns_df = table_columns_df.append(pandas.DataFrame(get_column_list_table_name_array(table_name, column_list), columns = ['column', 'table_name']))
     bar.finish()
 
-    table_columns_df.set_index('column').to_sql('metadata', disk_engine, if_exists='fail')
+    table_columns_df.set_index('column').to_sql('metadata', disk_engine, if_exists='replace')
 
 def update_metadata(disk_engine):
   table_names = get_table_names_from_database(disk_engine)
@@ -68,6 +71,6 @@ def update_metadata(disk_engine):
 
 directory = '../data/2011_BCP_ALL_for_AUST_long-header/2011 Census BCP All Geographies for AUST/'
 disk_engine = create_engine('sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db') # Initializes database
-geo_levels_to_read = ['SA3']
+geo_levels_to_read = ['SA1', 'SA3']
 
 read_data_for_geo_level_into_database(directory, geo_levels_to_read, disk_engine)
