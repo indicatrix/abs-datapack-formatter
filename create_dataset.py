@@ -5,10 +5,13 @@ from sqlalchemy import Table, Column, Integer, String, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
+import re
 from sqlalchemy import select
+from collections import defaultdict
+import yaml
 
 variables = [] # list of abs variables for constraintss
-geo_level = 'SA3' # string of geo level to fit at
+geo_level = 'SA1' # string of geo level to fit at
 geo_ids = 'all' # list of geoids to fit at or 'all'
 
 Base = declarative_base()
@@ -16,11 +19,11 @@ Base = declarative_base()
 class ABSMetaData(Base):
   __tablename__ = 'metadata'
   column = Column(String(250), primary_key=True)
-  table_name = Column(String(250), nullable=False)
+  table_name = Column(String(250), primary_key=True)
 
 # return hash of {table_name: variables_in_table}
-def get_variables_to_read_per_table(variables, column_to_table_dict):
-  variable_to_table_dict = {variable: column_to_table_dict[variable] for variable in variables}
+def get_variables_to_read_per_table(variables, geometry_level,  column_to_table_dict):
+  variable_to_table_dict = {variable: geometry_level + "_" + column_to_table_dict[geometry_level][variable] for variable in variables}
   return flip_dict(variable_to_table_dict)
 
 # get a lookup dict for variables to tables
@@ -30,12 +33,12 @@ def get_column_to_table_lookup_dict(disk_engine):
   DBSession.bind = disk_engine
   session = DBSession()
 
-  column_to_table_dict = {}
+  column_to_table_dict = defaultdict(lambda: defaultdict(str))
 
   metadata_table_rows = session.query(ABSMetaData)
   for row in metadata_table_rows:
-    column_to_table_dict[row.column] = row.table_name
-
+    match = re.search(r'(\w{3})_(\w+)', row.table_name)
+    column_to_table_dict[match.group(1)][row.column] =  match.group(2)
   return column_to_table_dict
 
 # flip keys and values in a dictionary, keys for duplicate values in list
@@ -76,11 +79,15 @@ def import_table_builder_outputs(data_directory):
   else:
     return None
 
+def get_variables(filename):
+  variables  = [line.rstrip('\n') for line in open(filename)]
+  print variables
+  return variables
+    
 disk_engine = create_engine('sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db') # Initializes database
-variables = ['Total_Persons', 'Total_Persons_Males', 'Total_Persons_Females', 'Persons_55_64_years_Widowed', 'Persons_Total_Total']
-
+variables = get_variables('../data/required_variables.yaml') 
 column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
-tables_to_variables_dict = get_variables_to_read_per_table(variables, column_to_table_dict)
+tables_to_variables_dict = get_variables_to_read_per_table(variables, geo_level, column_to_table_dict)
 
 dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(columns={'region_id': 'GeographyId'}).set_index('GeographyId')
 dataset_df.to_csv("../data/constraint_dataset.csv")
