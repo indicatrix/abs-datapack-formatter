@@ -4,7 +4,21 @@ from sqlalchemy import create_engine # database connection
 from sqlalchemy.engine import reflection
 from sqlalchemy import Table, Column, Integer, String, MetaData
 import progressbar
+import argparse
 import re
+
+def main():
+  parser = argparse.ArgumentParser(description="Create a dataset from an existing database of tablebuilder data.")
+  parser.add_argument('data_directory')
+  parser.add_argument('database')
+  args = parser.parse_args()
+  # '../data/2011_BCP_ALL_for_AUST_long-header/2011 Census BCP All Geographies for AUST/'
+  directory = args.data_directory 
+  # 'sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db'
+  connection_string = 'sqlite:///'+args.database
+  disk_engine = create_engine(connection_string) # Initializes database
+  geo_levels_to_read = ['SA1', 'SA3']
+  read_data_for_geo_level_into_database(directory, geo_levels_to_read, disk_engine)
 
 def get_table_names_from_database(disk_engine):
   insp = reflection.Inspector.from_engine(disk_engine)
@@ -69,8 +83,6 @@ def update_metadata(disk_engine):
 
   table_columns_df.set_index('column').to_sql('metadata', disk_engine, if_exists='replace')
 
-directory = '../data/2011_BCP_ALL_for_AUST_long-header/2011 Census BCP All Geographies for AUST/'
-disk_engine = create_engine('sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db') # Initializes database
-geo_levels_to_read = ['SA1', 'SA3']
 
-read_data_for_geo_level_into_database(directory, geo_levels_to_read, disk_engine)
+if __name__ == '__main__':
+  main()

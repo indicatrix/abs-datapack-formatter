@@ -10,11 +10,35 @@ from sqlalchemy import select
 from collections import defaultdict
 import yaml
 
-variables = [] # list of abs variables for constraintss
-geo_level = 'SA1' # string of geo level to fit at
-geo_ids = 'all' # list of geoids to fit at or 'all'
+import sys
+import getopt
+import argparse
 
 Base = declarative_base()
+
+def main():
+  parser = argparse.ArgumentParser(description="Create a dataset from an existing database of tablebuilder data.")
+  parser.add_argument('database')
+  parser.add_argument('variables')
+  parser.add_argument('output')
+  args = parser.parse_args()
+
+  # 'sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db'
+  connection_string = 'sqlite:///'+args.database
+
+  variables = get_variables(args.variables)
+  output_file = args.output
+
+  disk_engine = create_engine(connection_string) # Initializes database
+
+  column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
+  tables_to_variables_dict = get_variables_to_read_per_table(variables, geo_level, column_to_table_dict)
+
+  dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(columns={'region_id': 'GeographyId'}).set_index('GeographyId')
+  dataset_df = combine_variables('Tertiary', ['University_or_other_Tertiary_Institution_Total_Persons', 'Technical_or_Further_Educational_institution_Total_Persons'], dataset_df)
+  dataset_df['GeographyType'] = geo_level
+  # print dataset_df
+  dataset_df.to_csv(output_file)
 
 class ABSMetaData(Base):
   __tablename__ = 'metadata'
@@ -89,13 +113,5 @@ def combine_variables(combined_variable_name, variables_to_combine, dataframe):
   dataframe[combined_variable_name] = dataframe[variables_to_combine].sum(axis=1)
   return dataframe
 
-disk_engine = create_engine('sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db') # Initializes database
-variables = get_variables('../data/required_variables.yaml') 
-column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
-tables_to_variables_dict = get_variables_to_read_per_table(variables, geo_level, column_to_table_dict)
-
-dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(columns={'region_id': 'GeographyId'}).set_index('GeographyId')
-dataset_df = combine_variables('Tertiary', ['University_or_other_Tertiary_Institution_Total_Persons', 'Technical_or_Further_Educational_institution_Total_Persons'], dataset_df)
-dataset_df['GeographyType'] = geo_level
-print dataset_df
-dataset_df.to_csv("../data/constraint_dataset.csv")
+if __name__ == "__main__":
+  main()
