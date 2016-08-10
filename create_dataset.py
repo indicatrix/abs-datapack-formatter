@@ -20,6 +20,7 @@ def main():
   parser = argparse.ArgumentParser(description="Create a dataset from an existing database of tablebuilder data.")
   parser.add_argument('database')
   parser.add_argument('variables')
+  parser.add_argument('geo_level')
   parser.add_argument('output')
   args = parser.parse_args()
 
@@ -27,13 +28,17 @@ def main():
   connection_string = 'sqlite:///'+args.database
 
   variables = get_variables(args.variables)
+  geo_level = args.geo_level
   output_file = args.output
 
   disk_engine = create_engine(connection_string) # Initializes database
 
   column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
   tables_to_variables_dict = get_variables_to_read_per_table(variables, geo_level, column_to_table_dict)
+  print tables_to_variables_dict
 
+  print tables_to_variables_dict.values()[0]
+  print tables_to_variables_dict.keys()
   dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(columns={'region_id': 'GeographyId'}).set_index('GeographyId')
   dataset_df = combine_variables('Tertiary', ['University_or_other_Tertiary_Institution_Total_Persons', 'Technical_or_Further_Educational_institution_Total_Persons'], dataset_df)
   dataset_df['GeographyType'] = geo_level

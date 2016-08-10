@@ -17,7 +17,7 @@ def main():
   # 'sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db'
   connection_string = 'sqlite:///'+args.database
   disk_engine = create_engine(connection_string) # Initializes database
-  geo_levels_to_read = ['SA1', 'SA3']
+  geo_levels_to_read = ['sa1']
   read_data_for_geo_level_into_database(directory, geo_levels_to_read, disk_engine)
 
 def get_table_names_from_database(disk_engine):
@@ -39,8 +39,8 @@ def read_data_for_geo_level_into_database(directory, geo_levels, disk_engine):
   table_columns_df = pandas.DataFrame()
 
   for geo_level in geo_levels:
-    print 'Building database for ' + geo_level
-    data_directory = directory+geo_level+'/AUST/'
+    # print 'Building database for ' + geo_level
+    data_directory = directory+'/'+geo_level+'/AUST/'
     directory_file_list = os.listdir(data_directory)
 
     bar = progressbar.ProgressBar(maxval=len(directory_file_list), \
@@ -52,7 +52,7 @@ def read_data_for_geo_level_into_database(directory, geo_levels, disk_engine):
        continue
       bar.update(i)
       reg = r'([A-Z]+)(\d+)([A-Z]*)'
-      print filename
+      # print filename
       match = re.search(reg, filename).group(0)
       table_name = (geo_level + '_' + match)
       if table_name not in table_names:
@@ -82,7 +82,6 @@ def update_metadata(disk_engine):
   bar.finish()
 
   table_columns_df.set_index('column').to_sql('metadata', disk_engine, if_exists='replace')
-
 
 if __name__ == '__main__':
   main()
