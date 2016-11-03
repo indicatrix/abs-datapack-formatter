@@ -16,4 +16,4 @@ Download the basic community profile, long header, for all of Australia geograph
 `python create_dataset.py {DATABSE} variables.yaml {GEO_LEVEL} {OUTPUT_FILE}`
 
 Where `{GEO_LEVEL}` is one of:
-sa2, sa3, sa4
+sa1, sa2, sa3, sa4
