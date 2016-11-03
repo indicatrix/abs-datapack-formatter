@@ -4,7 +4,7 @@ Take datapacks downloaded from http://www.abs.gov.au/websitedbs/censushome.nsf/h
 
 This can be used as an alternative to tablebuilder.
 
-## Setup
+## Setup and Use
 
 Download the basic community profile, long header, for all of Australia geographies from the ABS website: http://www.abs.gov.au/websitedbs/censushome.nsf/home/datapacks.
 
