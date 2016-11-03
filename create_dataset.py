@@ -40,7 +40,7 @@ def main():
   print tables_to_variables_dict.values()[0]
   print tables_to_variables_dict.keys()
   dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(columns={'region_id': 'GeographyId'}).set_index('GeographyId')
-  dataset_df = combine_variables('Tertiary', ['University_or_other_Tertiary_Institution_Total_Persons', 'Technical_or_Further_Educational_institution_Total_Persons'], dataset_df)
+  # dataset_df = combine_variables('Tertiary', ['University_or_other_Tertiary_Institution_Total_Persons', 'Technical_or_Further_Educational_institution_Total_Persons'], dataset_df)
   dataset_df['GeographyType'] = geo_level
   # print dataset_df
   dataset_df.to_csv(output_file)
@@ -52,6 +52,8 @@ class ABSMetaData(Base):
 
 # return hash of {table_name: variables_in_table}
 def get_variables_to_read_per_table(variables, geometry_level,  column_to_table_dict):
+  dict_file = open('./dict.thing', 'w+')
+  print >> dict_file, column_to_table_dict 
   variable_to_table_dict = {variable: geometry_level + "_" + column_to_table_dict[geometry_level][variable] for variable in variables}
   return flip_dict(variable_to_table_dict)
 

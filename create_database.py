@@ -17,7 +17,7 @@ def main():
   # 'sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db'
   connection_string = 'sqlite:///'+args.database
   disk_engine = create_engine(connection_string) # Initializes database
-  geo_levels_to_read = ['sa1']
+  geo_levels_to_read = ['sa2', 'sa3', 'sa4']
   read_data_for_geo_level_into_database(directory, geo_levels_to_read, disk_engine)
 
 def get_table_names_from_database(disk_engine):
