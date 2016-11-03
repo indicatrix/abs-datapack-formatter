@@ -53,8 +53,15 @@ class ABSMetaData(Base):
 # return hash of {table_name: variables_in_table}
 def get_variables_to_read_per_table(variables, geometry_level,  column_to_table_dict):
   dict_file = open('./dict.thing', 'w+')
-  print >> dict_file, column_to_table_dict 
-  variable_to_table_dict = {variable: geometry_level + "_" + column_to_table_dict[geometry_level][variable] for variable in variables}
+  print >> dict_file, column_to_table_dict
+  if geometry_level not in column_to_table_dict: raise KeyError(geometry_level + ' does not exist in data pack')
+  geo_hash = column_to_table_dict[geometry_level]
+
+  variable_to_table_dict = {}
+  for variable in variables:
+    if variable not in geo_hash: raise KeyError(variable + ' not found in data pack')
+    variable_to_table_dict[variable] = geometry_level + '_' + geo_hash[variable]
+
   return flip_dict(variable_to_table_dict)
 
 # get a lookup dict for variables to tables
