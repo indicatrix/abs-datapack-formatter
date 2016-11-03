@@ -14,6 +14,10 @@ pip install pandas sqlalchemy PyYAML progressbar
 
 Download the basic community profile, long header, for all of Australia geographies from the ABS website: http://www.abs.gov.au/websitedbs/censushome.nsf/home/datapacks.
 
+For the example `variables.yaml` to work, and to work with easier to understand variables in general, ensure you download the long header form:
+
+![screenshot of long header dropdown](long-header.png)
+
 ### Create the database:
 
 `python create_database.py {DATAPACK_LOCATION}/2011_BCP_ALL_for_AUST_long-header/2011\ Census\ BCP\ All\ Geographies\ for\ AUST  {OUTPUT_DATABSE}`
