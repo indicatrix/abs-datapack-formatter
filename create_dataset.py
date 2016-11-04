@@ -33,6 +33,7 @@ def main():
     'csv': lambda dt: dt.to_csv(args.output),
     'postgres': lambda dt: dt.to_sql(name=args.table_name, con=create_engine(args.output))
   }
+  if args.output_type not in writers: raise RuntimeError(args.output_type + ' output type does not have a writer')
 
   # 'sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db'
   connection_string = 'sqlite:///'+args.database
@@ -48,7 +49,7 @@ def main():
   dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(columns={'region_id': 'GeographyId'}).set_index('GeographyId')
   dataset_df['GeographyType'] = geo_level
 
-  writers.get(args.output_type)(dataset_df)
+  writers[args.output_type](dataset_df)
 
 class ABSMetaData(Base):
   __tablename__ = 'metadata'
