@@ -28,11 +28,14 @@ For the example `variables.yaml` to work, and to work with easier to understand 
 
 You may write to CSV
 
-`python create_dataset.py {DATABSE} variables.yaml {GEO_LEVEL} {OUTPUT_FILE}`
+`python create_dataset.py {DATABSE} variables.yaml {GEO_LEVEL} foo.csv`
 
 ...or postgres
 
-`python create_dataset.py {DATABSE} variables.yaml {GEO_LEVEL} {OUTPUT_FILE} --output-type postgres --table-name {TABLE_NAME}`
+```
+python create_dataset.py {DATABSE} variables.yaml {GEO_LEVEL} postgresql://user:pass@hostname:5432/dbname \
+  --output-type postgres --table-name {TABLE_NAME}
+```
 
 Where `{GEO_LEVEL}` is one of:
 sa1, sa2, sa3, sa4
