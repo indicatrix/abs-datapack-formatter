@@ -21,29 +21,34 @@ def main():
   parser.add_argument('database')
   parser.add_argument('variables')
   parser.add_argument('geo_level')
-  parser.add_argument('output')
+  parser.add_argument('output', help='file path or database connection string')
+  parser.add_argument('--output-type', type=str, default='csv', choices=['csv', 'postgres'])
+  parser.add_argument('--table-name', type=str)
   args = parser.parse_args()
+
+  if args.output_type == 'postgres' and args.table_name is None:
+    raise RuntimeError('Must provide --table-name when --output-type is Postgres')
+
+  writers = {
+    'csv': lambda dt: dt.to_csv(args.output),
+    'postgres': lambda dt: dt.to_sql(name=args.table_name, con=create_engine(args.output))
+  }
 
   # 'sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db'
   connection_string = 'sqlite:///'+args.database
 
   variables = get_variables(args.variables)
   geo_level = args.geo_level
-  output_file = args.output
 
   disk_engine = create_engine(connection_string) # Initializes database
 
   column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
   tables_to_variables_dict = get_variables_to_read_per_table(variables, geo_level, column_to_table_dict)
-  print tables_to_variables_dict
 
-  print tables_to_variables_dict.values()[0]
-  print tables_to_variables_dict.keys()
   dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(columns={'region_id': 'GeographyId'}).set_index('GeographyId')
-  # dataset_df = combine_variables('Tertiary', ['University_or_other_Tertiary_Institution_Total_Persons', 'Technical_or_Further_Educational_institution_Total_Persons'], dataset_df)
   dataset_df['GeographyType'] = geo_level
-  # print dataset_df
-  dataset_df.to_csv(output_file)
+
+  writers.get(args.output_type)(dataset_df)
 
 class ABSMetaData(Base):
   __tablename__ = 'metadata'
