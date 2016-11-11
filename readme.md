@@ -6,8 +6,10 @@ This can be used as an alternative to tablebuilder.
 
 ## Install dependencies
 
+**Note**: `psychopg2` is only required if writing to postgres
+
 ```
-pip install pandas sqlalchemy PyYAML progressbar
+pip install pandas sqlalchemy PyYAML progressbar psycopg2
 ```
 
 ## Setup and Use
@@ -23,7 +25,17 @@ For the example `variables.yaml` to work, and to work with easier to understand 
 `python create_database.py {DATAPACK_LOCATION}/2011_BCP_ALL_for_AUST_long-header/2011\ Census\ BCP\ All\ Geographies\ for\ AUST  {OUTPUT_DATABSE}`
 
 ### Create the dataset:
-`python create_dataset.py {DATABSE} variables.yaml {GEO_LEVEL} {OUTPUT_FILE}`
+
+You may write to CSV
+
+`python create_dataset.py {DATABSE} variables.yaml {GEO_LEVEL} foo.csv`
+
+...or postgres
+
+```
+python create_dataset.py {DATABSE} variables.yaml {GEO_LEVEL} postgresql://user:pass@hostname:5432/dbname \
+  --output-type postgres --table-name {TABLE_NAME}
+```
 
 Where `{GEO_LEVEL}` is one of:
 sa1, sa2, sa3, sa4
