@@ -51,19 +51,22 @@ def main():
     disk_engine = create_engine(connection_string)  # Initializes database
 
     column_to_table_dict = get_column_to_table_lookup_dict(disk_engine)
+
+
     tables_to_variables_dict = get_variables_to_read_per_table(
         variables, geo_level, column_to_table_dict)
 
-    dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(
-        columns={'region_id': 'GeographyId'}).set_index('GeographyId')
-    dataset_df['GeographyType'] = geo_level
+    # dataset_df = read_from_database(tables_to_variables_dict, disk_engine).rename(
+    #     columns={'region_id': 'GeographyId'}).set_index('GeographyId')
+    # dataset_df['GeographyType'] = geo_level
 
-    writers[args.output_type](dataset_df)
+    # writers[args.output_type](dataset_df)
 
 
 class ABSMetaData(Base):
     __tablename__ = 'metadata'
-    column = Column(String(250), primary_key=True)
+    short = Column(String(250), primary_key=True)
+    long = Column(String(250), primary_key=True)
     table_name = Column(String(250), primary_key=True)
 
 # return hash of {table_name: variables_in_table}
@@ -75,15 +78,18 @@ def get_variables_to_read_per_table(variables, geometry_level,  column_to_table_
     if geometry_level not in column_to_table_dict:
         raise KeyError(geometry_level + ' does not exist in data pack')
     geo_hash = column_to_table_dict[geometry_level]
-
+    print geo_hash.keys()
     variable_to_table_dict = {}
     for variable in variables:
-        if variable not in geo_hash:
-            raise KeyError(variable + ' not found in data pack')
-        variable_to_table_dict[variable] = geometry_level + \
-            '_' + geo_hash[variable]
+        print variable[1]
+        if variable[1] not in geo_hash.keys():
+            raise KeyError(variable[1] + ' not found in data pack')
 
-    return flip_dict(variable_to_table_dict)
+        variable_to_table_dict[variable[1]] = geometry_level + \
+            '_' + variable[0]
+
+    print variable_to_table_dict
+    # return flip_dict(variable_to_table_dict)
 
 # get a lookup dict for variables to tables
 
@@ -99,7 +105,7 @@ def get_column_to_table_lookup_dict(disk_engine):
     metadata_table_rows = session.query(ABSMetaData)
     for row in metadata_table_rows:
         match = re.search(r'(\w{3})_(\w+)', row.table_name)
-        column_to_table_dict[match.group(1)][row.column] = match.group(2)
+        column_to_table_dict[match.group(1)][row.long] = [match.group(2), row.short]
     return column_to_table_dict
 
 # flip keys and values in a dictionary, keys for duplicate values in list
@@ -151,7 +157,7 @@ def import_table_builder_outputs(data_directory):
 
 
 def get_variables(filename):
-    variables = [line.rstrip('\n') for line in open(filename)]
+    variables = [line.rstrip('\n').rstrip('\r').split(',') for line in open(filename)]
     return variables
 
 
