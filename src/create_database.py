@@ -18,7 +18,7 @@ def main():
   # 'sqlite:///../data/2011_BCP_ALL_for_AUST_long-header.db'
   connection_string = 'sqlite:///'+args.database
   disk_engine = create_engine(connection_string) # Initializes database
-  geo_levels_to_read = ['sa3', 'sa4']
+  geo_levels_to_read = ['sa2','sa3', 'sa4']
   read_data_for_geo_level_into_database(directory, geo_levels_to_read, disk_engine)
   update_metadata(directory, disk_engine)
 
@@ -37,8 +37,6 @@ def get_column_list_table_name_array(table_name, column_list, long_header_lookup
 
 def read_data_for_geo_level_into_database(directory, geo_levels, disk_engine):
   table_names = get_table_names_from_database(disk_engine)
-
-  table_columns_df = pandas.DataFrame()
 
   for geo_level in geo_levels:
     # print 'Building database for ' + geo_level
@@ -66,7 +64,6 @@ def read_data_for_geo_level_into_database(directory, geo_levels, disk_engine):
       else:
         column_list = get_column_names_from_table(disk_engine, table_name_with_geo_level)
 
-      # table_columns_df = table_columns_df.append(pandas.DataFrame(get_column_list_table_name_array(table_name, column_list[1:], long_header_lookup), columns = ['long', 'short', 'table_name']))
     bar.finish()
 
 def update_metadata(directory, disk_engine):
@@ -79,18 +76,23 @@ def update_metadata(directory, disk_engine):
   long_header_lookup = long_header_lookup[~long_header_lookup.index.duplicated(keep='first')]
 
   connection = disk_engine.connect()
-  table_columns_df = pandas.read_sql("SELECT * FROM metadata", connection)
+  if "metadata" in table_names:
+    table_columns_df = pandas.read_sql("SELECT * FROM metadata", connection)
+    metadata_table_names = table_columns_df['table_name']
+  else:
+    table_columns_df = pandas.DataFrame()
+    metadata_table_names = []
   
-  metadata_table_names = table_columns_df['table_name']
-  print metadata_table_names
   print 'Updating metadata from exisiting tables'
   bar.start()
   for i, table_name_with_geo_level in enumerate(table_names):
     bar.update(i)
     if (table_name_with_geo_level != "metadata"):
       table_name = table_name_with_geo_level.split('_')[1]
+      print table_name
+      print table_name not in metadata_table_names
       if (table_name not in metadata_table_names):
-        column_list = get_column_names_from_table(disk_engine, table_name)[1:-1]
+        column_list = get_column_names_from_table(disk_engine, table_name_with_geo_level)[1:-1]
         print column_list
         table_columns_df = table_columns_df.append(pandas.DataFrame(get_column_list_table_name_array(table_name, column_list, long_header_lookup), columns = ['long', 'short', 'table_name']))
   bar.finish()
